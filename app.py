@@ -1,44 +1,47 @@
 import os
 import sys
+import cloudinary
+import cloudinary.uploader
 from flask import Flask, render_template, request, redirect, flash, url_for
-from werkzeug.utils import secure_filename
 
+# Import database helpers
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'db'))
 from db.dbhelper import init_db, getall, addrecord, updaterecord, deleterecord
 
+# Flask app setup
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'd71068e934814ce781d1cfe5c3090684'
 
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
-app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+# ✅ Cloudinary configuration — make sure these are set in Render Environment Variables
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET')
+)
 
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
+# Initialize SQLite database
 try:
     init_db()
 except Exception as e:
-    print("⚠️ Database initialization skipped:", e)
+    print("⚠️ Database initialization error:", e)
 
-def allowed_file(filename):
-    """Check if uploaded file is an allowed image type."""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+# ---------------------------
+# Routes
+# ---------------------------
 
 @app.route("/")
 def index():
-    """Home route — displays the student list."""
+    """Home page showing all students."""
     try:
         students = getall('students')
     except Exception:
-        students = [] 
+        students = []
     return render_template("index.html", studentlist=students)
 
-@app.route("/main")
-def main():
-    return redirect(url_for('index'))
 
 @app.route("/savestudent", methods=['POST'])
 def savestudent():
-    """Save a new student record to the database."""
+    """Add a new student."""
     idno = request.form['idno'].strip()
     lastname = request.form['lastname'].strip()
     firstname = request.form['firstname'].strip()
@@ -50,16 +53,15 @@ def savestudent():
         flash("All fields are required!", "error")
         return redirect(url_for('index'))
 
-    photopath = 'images/account.png'
+    photopath = 'https://res.cloudinary.com/demo/image/upload/v1698788888/default_user.png'  # Default image
 
-    if photo and allowed_file(photo.filename):
-        filename = secure_filename(photo.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if photo:
         try:
-            photo.save(filepath)
-            photopath = f'uploads/{filename}'
-        except Exception:
-            flash(" Uploads not supported on this server (use Render or Railway for full support)", "warning")
+            upload_result = cloudinary.uploader.upload(photo)
+            photopath = upload_result.get('secure_url', photopath)
+        except Exception as e:
+            print("❌ Cloudinary upload error:", e)
+            flash("Could not upload photo to Cloudinary.", "warning")
 
     ok = addrecord(
         'students',
@@ -71,15 +73,14 @@ def savestudent():
         photo=photopath
     )
 
-    if ok:
-        flash("Student information saved successfully", "success")
-    else:
-        flash("Error saving student information", "error")
-
+    flash("Student information saved successfully" if ok else "Error saving student information",
+          "success" if ok else "error")
     return redirect(url_for('index'))
+
 
 @app.route("/editstudent", methods=['POST'])
 def editstudent():
+    """Edit an existing student."""
     id = request.form['id']
     idno = request.form['idno'].strip()
     lastname = request.form['lastname'].strip()
@@ -88,17 +89,16 @@ def editstudent():
     level = request.form['level'].strip()
     photo = request.files.get('photo')
 
-    old_photo = request.form.get('old_photo', 'images/account.png')
+    old_photo = request.form.get('old_photo', 'https://res.cloudinary.com/demo/image/upload/v1698788888/default_user.png')
     photopath = old_photo
 
-    if photo and allowed_file(photo.filename):
-        filename = secure_filename(photo.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if photo:
         try:
-            photo.save(filepath)
-            photopath = f'uploads/{filename}'
-        except Exception:
-            flash("⚠️ Uploads not supported on this server (use Render or Railway for full support)", "warning")
+            upload_result = cloudinary.uploader.upload(photo)
+            photopath = upload_result.get('secure_url', photopath)
+        except Exception as e:
+            print("❌ Cloudinary upload error:", e)
+            flash("Could not upload new photo to Cloudinary.", "warning")
 
     ok = updaterecord(
         'students',
@@ -111,28 +111,25 @@ def editstudent():
         photo=photopath
     )
 
-    if ok:
-        flash("Student updated successfully", "success")
-    else:
-        flash("Error updating student", "error")
-
+    flash("Student updated successfully" if ok else "Error updating student",
+          "success" if ok else "error")
     return redirect(url_for('index'))
+
 
 @app.route("/deletestudent")
 def deletestudent():
-    """Delete a student record."""
+    """Delete a student by ID."""
     id = request.args.get('id')
     ok = deleterecord('students', id=id)
 
-    if ok:
-        flash("Student deleted successfully", "success")
-    else:
-        flash("Error deleting student", "error")
-
+    flash("Student deleted successfully" if ok else "Error deleting student",
+          "success" if ok else "error")
     return redirect(url_for('index'))
 
 
+# ---------------------------
+# Run the app
+# ---------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-

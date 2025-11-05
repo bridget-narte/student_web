@@ -1,32 +1,28 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="ie-edge">
-		<meta name="viewport" content="width=device-width,initial-scale=1.0">
-		<link rel="stylesheet" href="{{ url_for('static',filename='css/w3.css') }}">
-		<title>Student Management v1.0</title>
-	</head>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="ie-edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/w3.css') }}">
+    <title>Student Management v1.0</title>
+  </head>
 
   <body>
 
     <div class="w3-bar w3-container w3-indigo" style="position:sticky;top:0">
-			<h4>Student Management v1.0</h4>
-		</div>
+      <h4>Student Management v1.0</h4>
+    </div>
 
-
-  
     <div class="w3-container w3-padding">
       {% block content %}
       {% endblock %}
     </div>
 
-
     <center>
-			&copy; BRIDGET D. NARTE, 2025
-		</center>
+      &copy; BRIDGET D. NARTE, 2025
+    </center>
 
-    
     <script>
 function previewImage(event) {
     const preview = document.getElementById('preview');
@@ -48,8 +44,14 @@ function editStudent(id, idno, lastname, firstname, course, level, photo) {
     document.getElementById("old_photo").value = photo;
 
     const preview = document.getElementById("preview");
+
+    // ✅ FIX: Detect if Cloudinary (absolute) URL or local static file
     if (photo && photo.trim() !== "") {
-        preview.src = "/static/" + photo;
+        if (photo.startsWith("http")) {
+            preview.src = photo; // Cloudinary image
+        } else {
+            preview.src = "/static/" + photo; // local file
+        }
     } else {
         preview.src = "{{ url_for('static', filename='images/account.png') }}";
     }
@@ -70,9 +72,7 @@ function resetForm() {
     document.getElementById("id").value = "";
     document.getElementById("preview").src = "{{ url_for('static', filename='images/account.png') }}";
 }
-</script>
-
+    </script>
 
   </body>
 </html>
-	  

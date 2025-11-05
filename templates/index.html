@@ -6,7 +6,6 @@
             <fieldset>
                 <legend><b>STUDENT INFORMATION</b></legend>
 
-                <!-- Added id="studentForm" -->
                 <form id="studentForm" action="{{ url_for('savestudent') }}" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="id" id="id">
                     <input type="hidden" name="old_photo" id="old_photo">
@@ -80,8 +79,14 @@
                 <td>{{ student['idno'] }}</td>
                 <td>
                     {% if student['photo'] %}
-                        <img src="{{ url_for('static', filename=student['photo']) }}" width="60" height="60"
-                            style="border-radius:50%; object-fit:cover;">
+                        {# ✅ FIX: handle Cloudinary URLs directly #}
+                        {% if student['photo'].startswith('http') %}
+                            <img src="{{ student['photo'] }}" width="60" height="60"
+                                style="border-radius:50%; object-fit:cover;">
+                        {% else %}
+                            <img src="{{ url_for('static', filename=student['photo']) }}" width="60" height="60"
+                                style="border-radius:50%; object-fit:cover;">
+                        {% endif %}
                     {% else %}
                         <img src="{{ url_for('static', filename='images/account.png') }}" width="60" height="60"
                             style="border-radius:50%; object-fit:cover;">
