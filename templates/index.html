@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="w3-row-padding">
+    <div class="w3-third">
+        <div class="w3-card-4 w3-container w3-padding-16">
+            <fieldset>
+                <legend><b>STUDENT INFORMATION</b></legend>
+
+                <!-- Added id="studentForm" -->
+                <form id="studentForm" action="{{ url_for('savestudent') }}" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="id" id="id">
+                    <input type="hidden" name="old_photo" id="old_photo">
+
+                    <center>
+                        <img id="preview" src="{{ url_for('static', filename='images/account.png') }}"
+                            class="w3-circle" width="120" height="120"
+                            style="object-fit:cover; border:2px solid #ccc;">
+                        <br><br>
+                        <input type="file" name="photo" id="photo" accept="image/*"
+                            class="w3-input w3-border" onchange="previewImage(event)">
+                    </center>
+
+                    <p>
+                        <label><b>IDNO</b></label>
+                        <input type="number" name="idno" id="idno" class="w3-input w3-border" required>
+                    </p>
+                    <p>
+                        <label><b>LASTNAME</b></label>
+                        <input type="text" name="lastname" id="lastname" class="w3-input w3-border" required>
+                    </p>
+                    <p>
+                        <label><b>FIRSTNAME</b></label>
+                        <input type="text" name="firstname" id="firstname" class="w3-input w3-border" required>
+                    </p>
+                    <p>
+                        <label><b>COURSE</b></label>
+                        <select name="course" id="course" class="w3-input w3-border" required>
+                            <option value="bscpe">COMPUTER ENGINEERING</option>
+                            <option value="bscs">COMPUTER SCIENCE</option>
+                            <option value="bsit">INFORMATION TECHNOLOGY</option>
+                            <option value="bshm">HOSPITALITY MANAGEMENT</option>
+                            <option value="bscj">CRIMINAL JUSTICE</option>
+                            <option value="bsce">CIVIL ENGINEERING</option>
+                        </select>
+                    </p>
+                    <p>
+                        <label><b>LEVEL</b></label>
+                        <select name='level' id='level' class='w3-input w3-border' required>
+                            <option value='1'>FIRST YEAR</option>
+                            <option value='2'>SECOND YEAR</option>
+                            <option value='3'>THIRD YEAR</option>
+                            <option value='4'>FOURTH YEAR</option>
+                        </select>
+                    </p>
+                    <p class="w3-right">
+                        <input type="submit" value="SAVE" class="w3-button w3-blue">
+                        <input type="reset" value="CANCEL" class="w3-button w3-green" onclick="resetForm()">
+                    </p>
+                </form>
+            </fieldset>
+        </div>
+    </div>
+
+    <div class="w3-twothird">
+        <table class="w3-table-all w3-card-4">
+            <tr>
+                <th>IDNO</th>
+                <th>PHOTO</th>
+                <th class="w3-hide-small w3-hide-medium">LASTNAME</th>
+                <th class="w3-hide-small w3-hide-medium">FIRSTNAME</th>
+                <th class="w3-hide-large">NAME</th>
+                <th class="w3-hide-small w3-hide-medium">COURSE</th>
+                <th class="w3-hide-small w3-hide-medium">LEVEL</th>
+                <th class="w3-hide-large">COURSE&LEVEL</th>
+                <th>ACTION</th>
+            </tr>
+
+            {% for student in studentlist %}
+            <tr>
+                <td>{{ student['idno'] }}</td>
+                <td>
+                    {% if student['photo'] %}
+                        <img src="{{ url_for('static', filename=student['photo']) }}" width="60" height="60"
+                            style="border-radius:50%; object-fit:cover;">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/account.png') }}" width="60" height="60"
+                            style="border-radius:50%; object-fit:cover;">
+                    {% endif %}
+                </td>
+                <td class="w3-hide-small w3-hide-medium">{{ student['lastname'].upper() }}</td>
+                <td class="w3-hide-small w3-hide-medium">{{ student['firstname'].upper() }}</td>
+                <td class="w3-hide-large">{{ student['lastname'].upper() }}, {{ student['firstname'].upper() }}</td>
+                <td class="w3-hide-small w3-hide-medium">{{ student['course'].upper() }}</td>
+                <td class="w3-hide-small w3-hide-medium">{{ student['level'] }}</td>
+                <td class="w3-hide-large">{{ student['course'].upper() }}-{{ student['level'] }}</td>
+                <td>
+                    <button class="w3-button w3-small w3-blue"
+                        onclick="editStudent(
+                            '{{ student.id }}',
+                            '{{ student.idno }}',
+                            '{{ student.lastname }}',
+                            '{{ student.firstname }}',
+                            '{{ student.course }}',
+                            '{{ student.level }}',
+                            '{{ student.photo }}'
+                        )">&#128393;
+                    </button>
+
+                    <button class="w3-button w3-small w3-red"
+                        onclick="deleteStudent('{{ student.id }}')">&#128465;
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

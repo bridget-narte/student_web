@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="ie-edge">
+		<meta name="viewport" content="width=device-width,initial-scale=1.0">
+		<link rel="stylesheet" href="{{ url_for('static',filename='css/w3.css') }}">
+		<title>Student Management v1.0</title>
+	</head>
+
+  <body>
+
+    <div class="w3-bar w3-container w3-indigo" style="position:sticky;top:0">
+			<h4>Student Management v1.0</h4>
+		</div>
+
+
+  
+    <div class="w3-container w3-padding">
+      {% block content %}
+      {% endblock %}
+    </div>
+
+
+    <center>
+			&copy; BRIDGET D. NARTE, 2025
+		</center>
+
+    
+    <script>
+function previewImage(event) {
+    const preview = document.getElementById('preview');
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = e => preview.src = e.target.result;
+        reader.readAsDataURL(file);
+    }
+}
+
+function editStudent(id, idno, lastname, firstname, course, level, photo) {
+    document.getElementById("id").value = id;
+    document.getElementById("idno").value = idno;
+    document.getElementById("lastname").value = lastname;
+    document.getElementById("firstname").value = firstname;
+    document.getElementById("course").value = course;
+    document.getElementById("level").value = level;
+    document.getElementById("old_photo").value = photo;
+
+    const preview = document.getElementById("preview");
+    if (photo && photo.trim() !== "") {
+        preview.src = "/static/" + photo;
+    } else {
+        preview.src = "{{ url_for('static', filename='images/account.png') }}";
+    }
+
+    document.getElementById("studentForm").action = "/editstudent";
+    alert("Edit mode activated. Update fields and click SAVE.");
+}
+
+function deleteStudent(id) {
+    if (confirm("Delete this student?")) {
+        window.location.href = "/deletestudent?id=" + id;
+    }
+}
+
+function resetForm() {
+    document.getElementById("studentForm").reset();
+    document.getElementById("studentForm").action = "/savestudent";
+    document.getElementById("id").value = "";
+    document.getElementById("preview").src = "{{ url_for('static', filename='images/account.png') }}";
+}
+</script>
+
+
+  </body>
+</html>
+	  
