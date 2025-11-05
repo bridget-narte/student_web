@@ -3,21 +3,17 @@ import sys
 from flask import Flask, render_template, request, redirect, flash, url_for
 from werkzeug.utils import secure_filename
 
-# Add database path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'db'))
 from db.dbhelper import init_db, getall, addrecord, updaterecord, deleterecord
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'd71068e934814ce781d1cfe5c3090684'
 
-# Upload settings
 app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Create uploads folder (will work locally; ignored on Vercel)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Initialize database (works locally)
 try:
     init_db()
 except Exception as e:
@@ -33,7 +29,7 @@ def index():
     try:
         students = getall('students')
     except Exception:
-        students = []  # fallback for Vercel preview builds
+        students = [] 
     return render_template("index.html", studentlist=students)
 
 @app.route("/main")
@@ -63,8 +59,7 @@ def savestudent():
             photo.save(filepath)
             photopath = f'uploads/{filename}'
         except Exception:
-            # On Vercel, filesystem is read-only
-            flash("⚠️ Uploads not supported on this server (use Render or Railway for full support)", "warning")
+            flash(" Uploads not supported on this server (use Render or Railway for full support)", "warning")
 
     ok = addrecord(
         'students',
@@ -136,9 +131,7 @@ def deletestudent():
 
     return redirect(url_for('index'))
 
-# ✅ This allows Vercel to detect the Flask app
-# DO NOT wrap this in __main__
-# Vercel expects 'app' at global scope
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

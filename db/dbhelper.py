@@ -1,9 +1,15 @@
+import os
 import sqlite3
 
-DB_NAME = "school.db"
+if os.environ.get("RENDER") or os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/school.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "school.db")
+
 
 def init_db():
-    con = sqlite3.connect(DB_NAME)
+    """Initialize the database and create tables if needed."""
+    con = sqlite3.connect(DB_PATH)
     cur = con.cursor()
 
     cur.execute("""
@@ -18,15 +24,17 @@ def init_db():
         )
     """)
 
-
     con.commit()
     con.close()
 
 
+def get_connection():
+    """Return a connection to the database."""
+    return sqlite3.connect(DB_PATH)
+
 
 def getall(tablename: str) -> list:
-    """Fetch all records from a given table."""
-    con = sqlite3.connect(DB_NAME)
+    con = get_connection()
     con.row_factory = sqlite3.Row
     cur = con.cursor()
     cur.execute(f"SELECT * FROM {tablename}")
@@ -36,8 +44,7 @@ def getall(tablename: str) -> list:
 
 
 def getrecord(tablename: str, **kwargs) -> list:
-    """Fetch records based on given column filters."""
-    con = sqlite3.connect(DB_NAME)
+    con = get_connection()
     con.row_factory = sqlite3.Row
     cur = con.cursor()
 
@@ -51,9 +58,8 @@ def getrecord(tablename: str, **kwargs) -> list:
 
 
 def addrecord(tablename: str, **kwargs) -> bool:
-    """Insert record dynamically into any table."""
     try:
-        con = sqlite3.connect(DB_NAME)
+        con = get_connection()
         cur = con.cursor()
 
         columns = ", ".join(kwargs.keys())
@@ -65,14 +71,13 @@ def addrecord(tablename: str, **kwargs) -> bool:
         con.close()
         return True
     except Exception as e:
-        print("Error adding record:", e)
+        print(" Error adding record:", e)
         return False
 
 
 def updaterecord(tablename: str, id: int, **kwargs) -> bool:
-    """Update record by ID."""
     try:
-        con = sqlite3.connect(DB_NAME)
+        con = get_connection()
         cur = con.cursor()
 
         updates = ", ".join([f"{k}=?" for k in kwargs.keys()])
@@ -83,19 +88,18 @@ def updaterecord(tablename: str, id: int, **kwargs) -> bool:
         con.close()
         return True
     except Exception as e:
-        print("Error updating record:", e)
+        print(" Error updating record:", e)
         return False
 
 
 def deleterecord(tablename: str, id: int) -> bool:
-    """Delete record by ID."""
     try:
-        con = sqlite3.connect(DB_NAME)
+        con = get_connection()
         cur = con.cursor()
         cur.execute(f"DELETE FROM {tablename} WHERE id=?", (id,))
         con.commit()
         con.close()
         return True
     except Exception as e:
-        print("Error deleting record:", e)
+        print(" Error deleting record:", e)
         return False
